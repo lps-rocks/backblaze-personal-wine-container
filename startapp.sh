@@ -53,10 +53,19 @@ else
     fi
 fi
 
-# Disclaimer
-    # Check if auto-updates are disabled
+# Check if auto-updates are disabled
 if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
     echo "Auto-updates are disabled. Backblaze won't be updated."
+    echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
+    echo "UPDATER: DISABLE_AUTOUPDATE=true, Auto-updates are disabled. Starting Backblaze without updating."
+    if [ ! -d "${bzupdates_folder}"]; then
+        mkdir -p "${bzupdates_folder}"
+    fi
+    echo "Clearing ${bzupdates_folder} of any pending files."
+    rm -f "${bzupdates_folder}/*"
+    echo "Making ${bzupdates_folder} folder immutable. This prevents the backblaze program from forcing an update."
+    chattr +i "${bzupdates_folder}"
+    start_app
 else
     # Check the status of FORCE_LATEST_UPDATE
     if [ "$FORCE_LATEST_UPDATE" = "true" ]; then
@@ -95,18 +104,6 @@ start_app() {
     wine64 "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" -noquiet &
     sleep infinity
 }
-
-# Check if auto-updates are disabled
-if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
-    if [ ! -d "${bzupdates_folder}"]; then
-        mkdir -p "${bzupdates_folder}"
-    fi
-    log_message "Clearing ${bzupdates_folder} of any pending files."
-    rm -f "${bzupdates_folder}/*"
-    log_message "Making ${bzupdates_folder} folder immutable. This prevents the backblaze program from forcing an update."
-    chattr +i "${bzupdates_folder}"
-    start_app
-fi
 
 if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
     check_url_validity() {
