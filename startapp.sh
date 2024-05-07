@@ -3,6 +3,7 @@ set -x
 
 # Define globals
 local_version_file="${WINEPREFIX}dosdevices/c:/ProgramData/Backblaze/bzdata/bzreports/bzserv_version.txt"
+bzupdates_folder="${WINEPREFIX}dosdevices/c:/Program Files (x86)/Backblaze/bzupdates"
 install_exe_path="${WINEPREFIX}dosdevices/c:/"
 log_file="${STARTUP_LOGFILE:-${WINEPREFIX}dosdevices/c:/backblaze-wine-startapp.log}"
 custom_user_agent="backblaze-personal-wine (JonathanTreffler, +https://github.com/JonathanTreffler/backblaze-personal-wine-container), CFNetwork"
@@ -124,8 +125,11 @@ if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
 
     # Check if auto-updates are disabled
     if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
-        echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
-        log_message "UPDATER: DISABLE_AUTOUPDATE=true, Auto-updates are disabled. Starting Backblaze without updating."
+        if [ ! -d "${bzupdates_folder}"]; then
+            mkdir -p "${bzupdates_folder}"
+        fi
+        log_message "Making ${bzupdates_folder} folder immutable. This prevents the backblaze program from forcing an update"
+        chattr +i "${bzupdates_folder}"
         start_app
     fi
 
