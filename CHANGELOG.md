@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Overhauled Base Image Source (Now uses Debian 11)
+- New method for preventing backblaze client updates (Prevents updater from writing to certain files/folders)
+- Pinned version that doesn't detect and throttle wine based installs
+
 ## 1.9
 
 ### Changed
