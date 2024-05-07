@@ -1,9 +1,9 @@
-![Github License](https://img.shields.io/github/license/JonathanTreffler/backblaze-personal-wine-container?style=flat-square)
-![Docker Pulls](https://img.shields.io/docker/pulls/tessypowder/backblaze-personal-wine?style=flat-square)
-![Docker Image Size](https://img.shields.io/docker/image-size/tessypowder/backblaze-personal-wine/latest?style=flat-square)
+![Github License](https://img.shields.io/github/license/lps-rocks/backblaze-personal-wine-container?style=flat-square)
+<!-- ![Docker Pulls](https://img.shields.io/docker/pulls/tessypowder/backblaze-personal-wine?style=flat-square) -->
+<!-- ![Docker Image Size](https://img.shields.io/docker/image-size/tessypowder/backblaze-personal-wine/latest?style=flat-square) -->
 ![Maintenance](https://img.shields.io/maintenance/yes/2024?style=flat-square)
-![GitHub last commit](https://img.shields.io/github/last-commit/JonathanTreffler/backblaze-personal-wine-container?style=flat-square)
-![GitHub contributors](https://img.shields.io/github/contributors/JonathanTreffler/backblaze-personal-wine-container?style=flat-square)
+![GitHub last commit](https://img.shields.io/github/last-commit/lps-rocks/backblaze-personal-wine-container?style=flat-square)
+![GitHub contributors](https://img.shields.io/github/contributors/lps-rocks/backblaze-personal-wine-container?style=flat-square)
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
 # Backblaze Personal Wine Community Container
@@ -74,26 +74,15 @@ Here are the main components of this image:
 
 | Tag | Description |
 |-----|-------------|
-| latest | Latest stable version of the image based on ubuntu 20 |
-| ubuntu22 | Latest stable version of the image based on ubuntu 22 |
-| ubuntu18 | Latest stable version of the image based on ubuntu 18 **(End of Life - unmaintained)** |
-| v1.x | Versioned stable releases based on ubuntu 20 |
-| main | Automatic build of the main branch (may be unstable) based on ubuntu 20 |
-
-There are currently no versioned ubuntu22 or ubuntu18 builds.
+| latest | Latest stable version of the image based on debian 11 |
+| main | Automatic build of the main branch (may be unstable) based on debian 11 |
 
 ### Platforms
 
 | Platform | Support |
 |-----|-------------|
 | linux/amd64 | Fully supported |
-| linux/arm64 | Currently no support (maybe in the future) |
-| linux/arm/v7 | No support |
-| linux/arm/v6 | No support |
-| linux/riscv64 | Currently no support (maybe in the future) |
-| linux/s390x | No support |
-| linux/ppc64le | No support |
-| linux/386 | No support |
+| all others | No support |
 
 As Backblaze runs on Windows and MacOS, there is no point in supporting these platforms.
 
@@ -104,7 +93,7 @@ Environment variables can be set by adding one or more arguments `-e "<VAR>=<VAL
 | Variable       | Description                                  | Default |
 |----------------|----------------------------------------------|---------|
 |`DISABLE_VIRTUAL_DESKTOP` | Disables Wine's Virtual Desktop Mode | false |
-|`DISABLE_AUTOUPDATE` | Disables the auto-update of the backblaze client to the latest known-good version at the time of the docker version release | false |
+|`DISABLE_AUTOUPDATE` | Disables the auto-update of the backblaze client to the latest known-good version at the time of the docker version release | true |
 |`FORCE_LATEST_UPDATE`| Forces the auto updater to download the newest version of the backblaze client from the backblaze servers instead of a known-good version from the Internet Archive | false |
 |`UMASK`| Mask that controls how file permissions are set for newly created files. The value of the mask is in octal notation.  By default, this variable is not set and the default umask of `022` is used, meaning that newly created files are readable by everyone, but only writable by the owner. See the following online umask calculator: http://wintelguy.com/umask-calc.pl | (unset) |
 |`TZ`| [TimeZone] of the container.  Timezone can also be set by mapping `/etc/localtime` between the host and the container. | `Etc/UTC` |
@@ -112,8 +101,8 @@ Environment variables can be set by adding one or more arguments `-e "<VAR>=<VAL
 |`USER_ID`| When mounting docker-volumes, permission issues can arise between the docker host and the container. You can pass the User_ID permissions to the container with this variable. | `1000` |
 |`GROUP_ID`| When mounting docker-volumes, permission issues can arise between the docker host and the container. You can pass the Group_ID permissions to the container with this variable. | `1000` |
 |`CLEAN_TMP_DIR`| When set to `1`, all files in the `/tmp` directory are deleted during the container startup. | `1` |
-|`DISPLAY_WIDTH`| Width (in pixels) of the virtual screen's window. (Has to be divisible by 4) | `900` |
-|`DISPLAY_HEIGHT`| Height (in pixels) of the virtual screen's window. (Has to be divisible by 4) | `700` |
+|`DISPLAY_WIDTH`| Width (in pixels) of the virtual screen's window. (Has to be divisible by 4) | `1080` |
+|`DISPLAY_HEIGHT`| Height (in pixels) of the virtual screen's window. (Has to be divisible by 4) | `960` |
 |`SECURE_CONNECTION`| When set to `1`, an encrypted connection is used to access the application's GUI (either via a web browser or VNC client).  See the [Security](#security) section for more details. | `0` |
 |`VNC_PASSWORD`| Password needed to connect to the application's GUI.  See the [VNC Password](#vnc-password) section for more details. | (unset) |
 |`X11VNC_EXTRA_OPTS`| Extra options to pass to the x11vnc server running in the Docker container.  **WARNING**: For advanced users. Do not use unless you know what you are doing. | (unset) |
