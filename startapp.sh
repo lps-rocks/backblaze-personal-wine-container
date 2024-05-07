@@ -96,6 +96,18 @@ start_app() {
     sleep infinity
 }
 
+# Check if auto-updates are disabled
+if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
+    if [ ! -d "${bzupdates_folder}"]; then
+        mkdir -p "${bzupdates_folder}"
+    fi
+    log_message "Clearing ${bzupdates_folder} of any pending files."
+    rm -f "${bzupdates_folder}/*"
+    log_message "Making ${bzupdates_folder} folder immutable. This prevents the backblaze program from forcing an update."
+    chattr +i "${bzupdates_folder}"
+    start_app
+fi
+
 if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
     check_url_validity() {
         url="$1"
@@ -120,18 +132,6 @@ if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
             return 1 # The local version is higher or equal
         fi
     }
-
-
-
-    # Check if auto-updates are disabled
-    if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
-        if [ ! -d "${bzupdates_folder}"]; then
-            mkdir -p "${bzupdates_folder}"
-        fi
-        log_message "Making ${bzupdates_folder} folder immutable. This prevents the backblaze program from forcing an update"
-        chattr +i "${bzupdates_folder}"
-        start_app
-    fi
 
     # Update process for force_latest_update set to true or not set
     if [ "$FORCE_LATEST_UPDATE" = "true" ]; then
