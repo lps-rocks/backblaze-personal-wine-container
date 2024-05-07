@@ -1,10 +1,10 @@
 ![Github License](https://img.shields.io/github/license/lps-rocks/backblaze-personal-wine-container?style=flat-square)
-<!-- ![Docker Pulls](https://img.shields.io/docker/pulls/tessypowder/backblaze-personal-wine?style=flat-square) -->
-<!-- ![Docker Image Size](https://img.shields.io/docker/image-size/tessypowder/backblaze-personal-wine/latest?style=flat-square) -->
 ![Maintenance](https://img.shields.io/maintenance/yes/2024?style=flat-square)
 ![GitHub last commit](https://img.shields.io/github/last-commit/lps-rocks/backblaze-personal-wine-container?style=flat-square)
 ![GitHub contributors](https://img.shields.io/github/contributors/lps-rocks/backblaze-personal-wine-container?style=flat-square)
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
+<!-- ![Docker Pulls](https://img.shields.io/docker/pulls/tessypowder/backblaze-personal-wine?style=flat-square) -->
+<!-- ![Docker Image Size](https://img.shields.io/docker/image-size/tessypowder/backblaze-personal-wine/latest?style=flat-square) -->
 
 # Backblaze Personal Wine Community Container
 
