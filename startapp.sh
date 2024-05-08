@@ -60,9 +60,9 @@ if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
         mkdir -p "${bzupdates_folder}"
     fi
     echo "Clearing ${bzupdates_folder} of any pending files."
-    sudo rm -f "${bzupdates_folder}/*"
-    echo "Making ${bzupdates_folder} folder immutable. This prevents the backblaze program from forcing an update."
-    sudo chattr +i "${bzupdates_folder}"
+    rm -f "${bzupdates_folder}/*"
+    echo "Making ${bzupdates_folder} folder not readable/writable. This should prevent the backblaze program from forcing an update."
+    chmod 000 "${bzupdates_folder}"
     start_app
 else
     # Check the status of FORCE_LATEST_UPDATE
