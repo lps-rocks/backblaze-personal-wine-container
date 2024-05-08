@@ -4,7 +4,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 set -u # Treat unset variables as an error.
 
 bzupdates_progam_files_folder="${WINEPREFIX}dosdevices/c:/Program Files (x86)/Backblaze/bzupdates"
-bzupdates_programdata_folder="${WINEPREFIX}dosdevices/c:/ProgramData/Backblaze/bzupdates"
+bzupdates_programdata_folder="${WINEPREFIX}dosdevices/c:/ProgramData/Backblaze/bzdata/bzupdates"
 
 # If Backblaze is installed
 if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then

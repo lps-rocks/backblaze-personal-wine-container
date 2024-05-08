@@ -57,10 +57,8 @@ fetch_and_install() {
     do
         sleep 1
     done
-    
     #Now that it's started we can kill the installer and the bzbui, and force the container to restart
     kill $(pgrep bzbui) $(pgrep bzdoinstall) $(pgrep install_backblaze)
-
 }
 
 # Pre-initialize Wine
