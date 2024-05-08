@@ -75,6 +75,12 @@ else
     fi
 fi
 
+start_app() {
+    log_message "STARTAPP: Starting Backblaze version $(cat "$local_version_file")"
+    wine64 "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" -noquiet &
+    sleep infinity
+}
+
 # Function to handle errors
 handle_error() {
     echo "Error: $1" >> "$log_file"
@@ -97,12 +103,6 @@ fetch_and_install() {
         WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" || handle_error "INSTALLER: Failed to install Backblaze"
     fi
 
-}
-
-start_app() {
-    log_message "STARTAPP: Starting Backblaze version $(cat "$local_version_file")"
-    wine64 "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" -noquiet &
-    sleep infinity
 }
 
 if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
