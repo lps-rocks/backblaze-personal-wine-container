@@ -16,6 +16,8 @@ pinned_bz_version_url=$(sed -n '2p' "$pinned_bz_version_file")
 export WINEARCH="win64"
 export WINEDLLOVERRIDES="mscoree=" # Disable Mono installation
 
+
+
 log_message() {
     echo "$(date): $1" >> "$log_file"
 }
@@ -42,36 +44,10 @@ fetch_and_install() {
         curl -A "$custom_user_agent" -L "$pinned_bz_version_url" --output "install_backblaze.exe" || handle_error "INSTALLER: error downloading from $pinned_bz_version_url"
     fi
     log_message "INSTALLER: Starting install_backblaze.exe"
-    # Install
-    wine64 "install_backblaze.exe" -nogui || handle_error "INSTALLER: Failed to install Backblaze"
-    log_message "INSTALLER: Disabling AutoUpdate"
-    if [ "$DISABLE_AUTOUPDATE" = "true"]; then
-        if ! grep -q "f000.backblazeb2.com" /etc/hosts; then
-            echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
-        fi
-    fi
-}
-
-check_url_validity() {
-    url="$1"
-    if http_code=$(curl -s -o /dev/null -w "%{http_code}" "$url"); then
-        if [ "$http_code" -eq 200 ]; then
-            content_type=$(curl -s -I "$url" | grep -i content-type | cut -d ':' -f2)
-            if echo "$content_type" | grep -q "xml"; then
-                return 0 # Valid XML content found
-            fi
-        fi
-    fi
-    return 1 # Invalid or unavailable content
-}
-
-compare_versions() {
-    local_version="$1"
-    compare_version="$2"
-    if dpkg --compare-versions "$local_version" lt "$compare_version"; then
-        return 0 # The compare_version is higher
+    if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
+        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" -nogui || handle_error "INSTALLER: Failed to install Backblaze"
     else
-        return 1 # The local version is higher or equal
+        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" || handle_error "INSTALLER: Failed to install Backblaze"
     fi
 }
 
@@ -105,6 +81,37 @@ else
         # Default aspect ratio
         log_message "WINE: Enabling Virtual Desktop mode with recommended aspect ratio"
         winetricks vd="900x700"
+    fi
+fi
+
+check_url_validity() {
+    url="$1"
+    if http_code=$(curl -s -o /dev/null -w "%{http_code}" "$url"); then
+        if [ "$http_code" -eq 200 ]; then
+            content_type=$(curl -s -I "$url" | grep -i content-type | cut -d ':' -f2)
+            if echo "$content_type" | grep -q "xml"; then
+                return 0 # Valid XML content found
+            fi
+        fi
+    fi
+    return 1 # Invalid or unavailable content
+}
+
+compare_versions() {
+    local_version="$1"
+    compare_version="$2"
+
+    if dpkg --compare-versions "$local_version" lt "$compare_version"; then
+        return 0 # The compare_version is higher
+    else
+        return 1 # The local version is higher or equal
+    fi
+}
+
+if [ "$DISABLE_AUTOUPDATE" = "true"]; then
+    echo "STARTUP: Disabling AutoUpdate"
+    if ! grep -q "f000.backblazeb2.com" /etc/hosts; then
+        echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
     fi
 fi
 
