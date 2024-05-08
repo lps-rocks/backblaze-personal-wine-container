@@ -57,7 +57,8 @@ fetch_and_install() {
     do
         sleep 1
     done
-    #Now that it's started we can kill the installer and the bzbui, and force the container to restart
+    #Now that it's started we can wait 30 seconds, kill the installer and the bzbui, and force the container to restart
+    sleep 30
     kill $(pgrep bzbui) $(pgrep bzdoinstall) $(pgrep install_backblaze)
 }
 
