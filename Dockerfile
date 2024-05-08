@@ -33,5 +33,5 @@ RUN apt-get update && \
 
 EXPOSE 5900
 
-COPY startapp.sh PINNED_BZ_VERSION /
+COPY rootfs /
 RUN chmod +x /startapp.sh

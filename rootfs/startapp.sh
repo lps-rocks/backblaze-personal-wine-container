@@ -16,8 +16,6 @@ pinned_bz_version_url=$(sed -n '2p' "$pinned_bz_version_file")
 export WINEARCH="win64"
 export WINEDLLOVERRIDES="mscoree=" # Disable Mono installation
 
-
-
 log_message() {
     echo "$(date): $1" >> "$log_file"
 }
@@ -107,13 +105,6 @@ compare_versions() {
         return 1 # The local version is higher or equal
     fi
 }
-
-if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
-    echo "STARTUP: Disabling AutoUpdate"
-    if ! grep -q "f000.backblazeb2.com" /etc/hosts; then
-        echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
-    fi
-fi
 
 # If Backblaze is installed
 if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
