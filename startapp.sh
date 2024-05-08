@@ -58,7 +58,7 @@ if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
     echo "Auto-updates are disabled. Backblaze won't be updated."
     echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
     echo "UPDATER: DISABLE_AUTOUPDATE=true, Auto-updates are disabled. Starting Backblaze without updating."
-    if [ ! -d "${bzupdates_folder}"]; then
+    if [ ! -d "${bzupdates_folder}" ]; then
         mkdir -p "${bzupdates_folder}"
     fi
     echo "Clearing ${bzupdates_folder} of any pending files."
