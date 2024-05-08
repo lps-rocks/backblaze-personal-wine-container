@@ -16,12 +16,11 @@ ENV DISPLAY=:0
 
 RUN apt-get update && \
     sed -r -i 's/main$/main contrib non-free/g' /etc/apt/sources.list && \
-    apt-get install -y curl software-properties-common gnupg2 winbind xvfb wget && \
+    apt-get install -y curl software-properties-common gnupg2 winbind xvfb wget procps && \
     dpkg --add-architecture i386 && \
     mkdir -pm755 /etc/apt/keyrings && \
     wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
     wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/debian/dists/bullseye/winehq-bullseye.sources && \
-    sed -r -i 's/main$/main contrib non-free/g' /etc/apt/sources.list.d/winehq-bullseye.sources && \
     apt-get update && \
     apt-get install -y winehq-stable && \
     apt-get install -y winetricks && \

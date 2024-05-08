@@ -3,7 +3,6 @@ set -x
 
 # Define globals
 local_version_file="${WINEPREFIX}dosdevices/c:/ProgramData/Backblaze/bzdata/bzreports/bzserv_version.txt"
-bzupdates_folder="${WINEPREFIX}dosdevices/c:/Program Files (x86)/Backblaze/bzupdates"
 install_exe_path="${WINEPREFIX}dosdevices/c:/"
 log_file="${STARTUP_LOGFILE:-${WINEPREFIX}dosdevices/c:/backblaze-wine-startapp.log}"
 custom_user_agent="backblaze-personal-wine (JonathanTreffler, +https://github.com/JonathanTreffler/backblaze-personal-wine-container), CFNetwork"
@@ -43,10 +42,25 @@ fetch_and_install() {
     fi
     log_message "INSTALLER: Starting install_backblaze.exe"
     if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
-        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" -nogui || handle_error "INSTALLER: Failed to install Backblaze"
+        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" -nogui &
     else
-        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" || handle_error "INSTALLER: Failed to install Backblaze"
+        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" &
     fi
+    log_message "INSTALLER: Waiting for installer to finish"
+    # First wait for the installer to start
+    while [ "$(pgrep bzdoinstall)" = "" ]
+    do
+        sleep 1
+    done
+    # Now we wait for the bzgui to start
+    while [ "$(pgrep bzbui)" = "" ]
+    do
+        sleep 1
+    done
+    
+    #Now that it's started we can kill the installer and the bzbui, and force the container to restart
+    kill $(pgrep bzbui) $(pgrep bzdoinstall) $(pgrep install_backblaze)
+
 }
 
 # Pre-initialize Wine
@@ -132,7 +146,6 @@ if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
                     if compare_versions "$local_version" "$xml_version"; then
                         log_message "UPDATER: Newer version found - downloading and installing the newer version..."
                         fetch_and_install
-                        start_app # Exit after successful download+installation and start app
                     else
                         log_message "UPDATER: The installed version is up to date."
                         start_app # Exit autoupdate and start app
@@ -155,7 +168,6 @@ if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
             if compare_versions "$local_version" "$pinned_bz_version"; then
                 log_message "UPDATER: Newer version found - downloading and installing the newer version..."
                 fetch_and_install
-                start_app # Exit after successful download+installation and start app
             else
                 log_message "UPDATER: Installed version is up to date. There may be a newer version available when using FORCE_LATEST_UPDATE=true"
                 start_app # Exit autoupdate and start app
@@ -166,5 +178,4 @@ if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
     fi
 else # Client currently not installed
     fetch_and_install
-    start_app
 fi

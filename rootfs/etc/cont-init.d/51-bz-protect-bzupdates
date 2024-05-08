@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e # Exit immediately if a command exits with a non-zero status.
+set -u # Treat unset variables as an error.
+
+bzupdates_progam_files_folder="${WINEPREFIX}dosdevices/c:/Program Files (x86)/Backblaze/bzupdates"
+bzupdates_programdata_folder="${WINEPREFIX}dosdevices/c:/ProgramData/Backblaze/bzupdates"
+
+# If Backblaze is installed
+if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
+    # Force create the bzupdates folders if they don't exist
+    if [ ! -d "${bzupdates_progam_files_folder}" ]; then
+        mkdir -p "${bzupdates_progam_files_folder}"
+    fi
+    if [ ! -d "${bzupdates_programdata_folder}" ]; then
+        mkdir -p "${bzupdates_programdata_folder}"
+    fi
+    if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
+        echo "STARTUP: Protecting bzupdates folders"
+        chown root:root "${bzupdates_progam_files_folder}" "${bzupdates_programdata_folder}"
+        chmod 000 "${bzupdates_progam_files_folder}" "${bzupdates_programdata_folder}"        
+    else
+        chown app:app "${bzupdates_progam_files_folder}" "${bzupdates_programdata_folder}"
+        chmod 755 "${bzupdates_progam_files_folder}" "${bzupdates_programdata_folder}"
+    fi 
+fi
