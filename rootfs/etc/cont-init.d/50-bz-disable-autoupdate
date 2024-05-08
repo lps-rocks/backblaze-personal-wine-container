@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e # Exit immediately if a command exits with a non-zero status.
+set -u # Treat unset variables as an error.
+
+if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
+    echo "STARTUP: Disabling AutoUpdate"
+    if ! grep -q "f000.backblazeb2.com" /etc/hosts; then
+        echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
+    fi
+else
+    if grep -q "f000.backblazeb2.com" /etc/hosts; then
+        sed -i '/127.0.0.1    f000.backblazeb2.com/d' /etc/hosts
+    fi
+fi 
