@@ -108,7 +108,7 @@ compare_versions() {
     fi
 }
 
-if [ "$DISABLE_AUTOUPDATE" = "true"]; then
+if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
     echo "STARTUP: Disabling AutoUpdate"
     if ! grep -q "f000.backblazeb2.com" /etc/hosts; then
         echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
