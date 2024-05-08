@@ -42,12 +42,37 @@ fetch_and_install() {
         curl -A "$custom_user_agent" -L "$pinned_bz_version_url" --output "install_backblaze.exe" || handle_error "INSTALLER: error downloading from $pinned_bz_version_url"
     fi
     log_message "INSTALLER: Starting install_backblaze.exe"
-    if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
-        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" -nogui || handle_error "INSTALLER: Failed to install Backblaze"
-    else
-        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" || handle_error "INSTALLER: Failed to install Backblaze"
+    # Install
+    wine64 "install_backblaze.exe" -nogui || handle_error "INSTALLER: Failed to install Backblaze"
+    log_message "INSTALLER: Disabling AutoUpdate"
+    if [ "$DISABLE_AUTOUPDATE" = "true"]; then
+        if ! grep -q "f000.backblazeb2.com" /etc/hosts; then
+            echo "127.0.0.1    f000.backblazeb2.com" >> /etc/hosts
+        fi
     fi
+}
 
+check_url_validity() {
+    url="$1"
+    if http_code=$(curl -s -o /dev/null -w "%{http_code}" "$url"); then
+        if [ "$http_code" -eq 200 ]; then
+            content_type=$(curl -s -I "$url" | grep -i content-type | cut -d ':' -f2)
+            if echo "$content_type" | grep -q "xml"; then
+                return 0 # Valid XML content found
+            fi
+        fi
+    fi
+    return 1 # Invalid or unavailable content
+}
+
+compare_versions() {
+    local_version="$1"
+    compare_version="$2"
+    if dpkg --compare-versions "$local_version" lt "$compare_version"; then
+        return 0 # The compare_version is higher
+    else
+        return 1 # The local version is higher or equal
+    fi
 }
 
 # Pre-initialize Wine
@@ -83,51 +108,8 @@ else
     fi
 fi
 
-# Check if auto-updates are disabled
-if [ "$DISABLE_AUTOUPDATE" = "true" ]; then
-    echo "UPDATER: DISABLE_AUTOUPDATE=true, Auto-updates are disabled. Starting Backblaze without updating."
-    if [ ! -d "${bzupdates_folder}" ]; then
-        mkdir -p "${bzupdates_folder}"
-    fi
-    echo "Clearing ${bzupdates_folder} of any pending files."
-    rm -f "${bzupdates_folder}/*"
-    echo "Making ${bzupdates_folder} folder not readable/writable. This should prevent the backblaze program from forcing an update."
-    chmod 000 "${bzupdates_folder}"
-    start_app
-else
-    # Check the status of FORCE_LATEST_UPDATE
-    if [ "$FORCE_LATEST_UPDATE" = "true" ]; then
-        echo "FORCE_LATEST_UPDATE is enabled which may brick your installation."
-    else
-        echo "FORCE_LATEST_UPDATE is disabled. Using known-good version of Backblaze."
-    fi
-fi
-
+# If Backblaze is installed
 if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
-    check_url_validity() {
-        url="$1"
-        if http_code=$(curl -s -o /dev/null -w "%{http_code}" "$url"); then
-            if [ "$http_code" -eq 200 ]; then
-                content_type=$(curl -s -I "$url" | grep -i content-type | cut -d ':' -f2)
-                if echo "$content_type" | grep -q "xml"; then
-                    return 0 # Valid XML content found
-                fi
-            fi
-        fi
-        return 1 # Invalid or unavailable content
-    }
-
-    compare_versions() {
-        local_version="$1"
-        compare_version="$2"
-
-        if dpkg --compare-versions "$local_version" lt "$compare_version"; then
-            return 0 # The compare_version is higher
-        else
-            return 1 # The local version is higher or equal
-        fi
-    }
-
     # Update process for force_latest_update set to true or not set
     if [ "$FORCE_LATEST_UPDATE" = "true" ]; then
         # Main auto update logic
@@ -185,6 +167,6 @@ if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
         fi
     fi
 else # Client currently not installed
-    fetch_and_install &&
+    fetch_and_install
     start_app
 fi
