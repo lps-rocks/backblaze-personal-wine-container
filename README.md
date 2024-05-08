@@ -14,6 +14,8 @@ It runs the Backblaze client and starts a virtual X server and a VNC server with
 
 ⚠️ This project is not affiliated with Backblaze Inc. ⚠️
 
+## Note: After the install + initial configuration, the docker container will need to restart. This is normal!
+
 ## Table of Content
 
    * **[Backblaze Personal Wine Container](#backblaze-personal-wine-container)**
@@ -44,6 +46,8 @@ This project is pretty new, but i would consider it quite stable.
 Backing up is tested well, Restoring is not tested very well so far.
 
 Still please be attentive during the install process, because as the docker has read/write access to all the data you want to back up and if you make a grave mistake you could delete stuff.
+
+
 
 ## Docker Images
 ### Content
@@ -277,7 +281,7 @@ container.
         --name backblaze_personal_backup \
         -v "[backup folder]/:/drive_d/" \
         -v "[config folder]/:/config/" \
-        tessypowder/backblaze-personal-wine:latest
+        ghcr.io/lps-rocks/backblaze-personal-wine-container:latest
     ````
 
 1. Open the Web Interface (on the port you specified in the docker run command, in this example 8080):
@@ -370,7 +374,7 @@ container.
         --name backblaze_personal_backup \
         -v "[backup folder]/:/drive_d/" \
         -v "[config folder]/:/config/" \
-        tessypowder/backblaze-personal-wine:latest
+        ghcr.io/lps-rocks/backblaze-personal-wine-container:latest
     ````
 
   - **Additional 'black screen' troubleshooting for Synology devices**:
@@ -386,7 +390,7 @@ container.
         --name backblaze_personal_backup \
         -v "[backup folder]/:/drive_d/" \
         -v "[config folder]/:/config/" \
-        tessypowder/backblaze-personal-wine:latest
+       ghcr.io/lps-rocks/backblaze-personal-wine-container:latest
     ````
 
   - **For More Information**: See [#98](https://github.com/JonathanTreffler/backblaze-personal-wine-container/issues/98), [#99](https://github.com/JonathanTreffler/backblaze-personal-wine-container/issues/99)
@@ -421,6 +425,6 @@ This docker image is based on @jlesage 's excellent [base image](https://github.
 ## Contributors:
 This project was made by:
 
-<a href="https://github.com/JonathanTreffler/backblaze-personal-wine-container/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=JonathanTreffler/backblaze-personal-wine-container" />
+<a href="https://github.com/lps-rocks/backblaze-personal-wine-container/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=lps-rocks/backblaze-personal-wine-container" />
 </a>
