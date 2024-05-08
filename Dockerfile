@@ -37,4 +37,5 @@ COPY rootfs /
 
 # Make scripts executable
 RUN chmod +x /startapp.sh
-RUN chmod +x /etc/cont-init.d/50-bz-disable-autoupdate
+RUN chmod +x /etc/cont-init.d/*
+
