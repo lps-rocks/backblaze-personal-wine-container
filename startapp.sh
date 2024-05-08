@@ -20,6 +20,36 @@ log_message() {
     echo "$(date): $1" >> "$log_file"
 }
 
+start_app() {
+    log_message "STARTAPP: Starting Backblaze version $(cat "$local_version_file")"
+    wine64 "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" -noquiet &
+    sleep infinity
+}
+
+# Function to handle errors
+handle_error() {
+    echo "Error: $1" >> "$log_file"
+    start_app # Start app even if there is a problem with the updater
+}
+
+fetch_and_install() {
+    cd "$install_exe_path" || handle_error "INSTALLER: can't navigate to $install_exe_path"
+    if [ "$FORCE_LATEST_UPDATE" = "true" ]; then
+        log_message "INSTALLER: FORCE_LATEST_UPDATE=true - downloading latest version"
+        curl -L "https://www.backblaze.com/win32/install_backblaze.exe" --output "install_backblaze.exe"
+    else
+        log_message "INSTALLER: FORCE_LATEST_UPDATE=false - downloading pinned version $pinned_bz_version from archive.org"
+        curl -A "$custom_user_agent" -L "$pinned_bz_version_url" --output "install_backblaze.exe" || handle_error "INSTALLER: error downloading from $pinned_bz_version_url"
+    fi
+    log_message "INSTALLER: Starting install_backblaze.exe"
+    if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
+        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" -nogui || handle_error "INSTALLER: Failed to install Backblaze"
+    else
+        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" || handle_error "INSTALLER: Failed to install Backblaze"
+    fi
+
+}
+
 # Pre-initialize Wine
 if [ ! -f "${WINEPREFIX}system.reg" ]; then
     echo "WINE: Wine not initialized, initializing"
@@ -72,36 +102,6 @@ else
         echo "FORCE_LATEST_UPDATE is disabled. Using known-good version of Backblaze."
     fi
 fi
-
-start_app() {
-    log_message "STARTAPP: Starting Backblaze version $(cat "$local_version_file")"
-    wine64 "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" -noquiet &
-    sleep infinity
-}
-
-# Function to handle errors
-handle_error() {
-    echo "Error: $1" >> "$log_file"
-    start_app # Start app even if there is a problem with the updater
-}
-
-fetch_and_install() {
-    cd "$install_exe_path" || handle_error "INSTALLER: can't navigate to $install_exe_path"
-    if [ "$FORCE_LATEST_UPDATE" = "true" ]; then
-        log_message "INSTALLER: FORCE_LATEST_UPDATE=true - downloading latest version"
-        curl -L "https://www.backblaze.com/win32/install_backblaze.exe" --output "install_backblaze.exe"
-    else
-        log_message "INSTALLER: FORCE_LATEST_UPDATE=false - downloading pinned version $pinned_bz_version from archive.org"
-        curl -A "$custom_user_agent" -L "$pinned_bz_version_url" --output "install_backblaze.exe" || handle_error "INSTALLER: error downloading from $pinned_bz_version_url"
-    fi
-    log_message "INSTALLER: Starting install_backblaze.exe"
-    if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
-        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" -nogui || handle_error "INSTALLER: Failed to install Backblaze"
-    else
-        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" || handle_error "INSTALLER: Failed to install Backblaze"
-    fi
-
-}
 
 if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
     check_url_validity() {
