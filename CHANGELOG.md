@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+None
+
+##2.0.0 - 2024-05-08
+
 ### Changed
 
 - Overhauled Base Image Source (Now uses Debian 11)
