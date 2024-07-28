@@ -1,12 +1,11 @@
 # Base Image
-FROM jlesage/baseimage-gui:debian-11-v4
+FROM jlesage/baseimage-gui:alpine-3.20-v4.6.3@sha256:37c970f3aa3287e3dc3c5e8d5e273425b149eb44992c8ce658c83f767ae218a5
 
 ENV WINEPREFIX /config/wine/
-ENV LANG en_US.UTF-8
 ENV APP_NAME="Backblaze Personal Backup"
 ENV FORCE_LATEST_UPDATE="false"
 ENV DISABLE_AUTOUPDATE="true"
-ENV DISABLE_VIRTUAL_DESKTOP="false"
+ENV DISABLE_VIRTUAL_DESKTOP="true"
 ENV DISPLAY_WIDTH="1080"
 ENV DISPLAY_HEIGHT="960"
 # Disable WINE Debug messages
@@ -14,28 +13,21 @@ ENV WINEDEBUG -all
 # Set DISPLAY to allow GUI programs to be run
 ENV DISPLAY=:0
 
-RUN apt-get update && \
-    sed -r -i 's/main$/main contrib non-free/g' /etc/apt/sources.list && \
-    apt-get install -y curl software-properties-common gnupg2 winbind xvfb wget procps && \
-    dpkg --add-architecture i386 && \
-    mkdir -pm755 /etc/apt/keyrings && \
-    wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
-    wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/debian/dists/bullseye/winehq-bullseye.sources && \
-    apt-get update && \
-    apt-get install -y winehq-stable && \
-    apt-get install -y winetricks && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y locales && \
-    sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=en_US.UTF-8 && \
-    apt-get clean -y && apt-get autoremove -y
+RUN apk update && \
+    apk add --no-cache \
+        curl \
+        wine=9.0-r0 \
+        samba \
+        xvfb \
+        dpkg \
+        dpkg \
+    && apk add --no-cache --virtual .build-deps \
+    && curl -Lo /usr/local/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
+    && chmod +x /usr/local/bin/winetricks \
+    && apk del .build-deps \
+    && rm -rf /var/cache/apk/*
 
-EXPOSE 5900
-
-# Copy all the files
-COPY rootfs /
-
+COPY rootfs/ /
 # Make scripts executable
 RUN chmod +x /startapp.sh
 RUN chmod +x /etc/cont-init.d/*
-
