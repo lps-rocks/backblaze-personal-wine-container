@@ -1,66 +1,20 @@
 #!/bin/bash
 set -x
 
-# Define globals
-local_version_file="${WINEPREFIX}dosdevices/c:/ProgramData/Backblaze/bzdata/bzreports/bzserv_version.txt"
-install_exe_path="${WINEPREFIX}dosdevices/c:/"
-log_file="${STARTUP_LOGFILE:-${WINEPREFIX}dosdevices/c:/backblaze-wine-startapp.log}"
-custom_user_agent="backblaze-personal-wine (JonathanTreffler, +https://github.com/JonathanTreffler/backblaze-personal-wine-container), CFNetwork"
+# Globals
+config="${CONFIG_DIR:-/config/}"
+log_file="${STARTUP_LOGFILE:-${CONFIG_DIR}/log/backblaze-wine-startup.log}"
+install_directory="${config}/installer/"
+install_file_name="install_backblaze.exe"
+install_file="${install_directory}/${install_file_name}"
+install_readme="${install_directory}/README.txt"
 
-# Extracting variables from the PINNED_VERSION file
-pinned_bz_version_file="/PINNED_BZ_VERSION"
-pinned_bz_version=$(sed -n '1p' "$pinned_bz_version_file")
-pinned_bz_version_url=$(sed -n '2p' "$pinned_bz_version_file")
-
-export WINEARCH="win64"
-export WINEDLLOVERRIDES="mscoree=" # Disable Mono installation
-
+# Functions
 log_message() {
-    echo "$(date): $1" >> "$log_file"
+    echo "$(date): $1" >> "${log_file}"
 }
 
-start_app() {
-    log_message "STARTAPP: Starting Backblaze version $(cat "$local_version_file")"
-    wine64 "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" -noquiet &
-    sleep infinity
-}
-
-# Function to handle errors
-handle_error() {
-    echo "Error: $1" >> "$log_file"
-    start_app # Start app even if there is a problem with the updater
-}
-
-fetch_and_install() {
-    cd "$install_exe_path" || handle_error "INSTALLER: can't navigate to $install_exe_path"
-    if [ "$FORCE_LATEST_UPDATE" = "true" ]; then
-        log_message "INSTALLER: FORCE_LATEST_UPDATE=true - downloading latest version"
-        curl -L "https://www.backblaze.com/win32/install_backblaze.exe" --output "install_backblaze.exe"
-    else
-        log_message "INSTALLER: FORCE_LATEST_UPDATE=false - downloading pinned version $pinned_bz_version from archive.org"
-        curl -A "$custom_user_agent" -L "$pinned_bz_version_url" --output "install_backblaze.exe" || handle_error "INSTALLER: error downloading from $pinned_bz_version_url"
-    fi
-    log_message "INSTALLER: Starting install_backblaze.exe"
-    if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
-        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" -nogui &
-    else
-        WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" &
-    fi
-    log_message "INSTALLER: Waiting for installer to finish"
-    # First wait for the installer to start
-    while [ "$(pgrep bzdoinstall)" = "" ]
-    do
-        sleep 1
-    done
-    # Now we wait for the bzgui to start
-    while [ "$(pgrep bzbui)" = "" ]
-    do
-        sleep 1
-    done
-    #Now that it's started we can wait 30 seconds, kill the installer and the bzbui, and force the container to restart
-    sleep 30
-    kill $(pgrep bzbui) $(pgrep bzdoinstall) $(pgrep install_backblaze)
-}
+# STARTUP
 
 # Pre-initialize Wine
 if [ ! -f "${WINEPREFIX}system.reg" ]; then
@@ -79,15 +33,15 @@ do
 done
 
 # Set Virtual Desktop
-cd $WINEPREFIX
-if [ "$DISABLE_VIRTUAL_DESKTOP" = "true" ]; then
+cd "${WINEPREFIX}"
+if [ "${DISABLE_VIRTUAL_DESKTOP}" = "true" ]; then
     log_message "WINE: DISABLE_VIRTUAL_DESKTOP=true - Virtual Desktop mode will be disabled"
     winetricks vd=off
 else
     # Check if width and height are defined
-    if [ -n "$DISPLAY_WIDTH" ] && [ -n "$DISPLAY_HEIGHT" ]; then
-    log_message "WINE: Enabling Virtual Desktop mode with $DISPLAY_WIDTH:$DISPLAY_WIDTH aspect ratio"
-    winetricks vd="$DISPLAY_WIDTH"x"$DISPLAY_HEIGHT"
+    if [ -n "${DISPLAY_WIDTH}" ] && [ -n "${DISPLAY_HEIGHT}" ]; then
+    log_message "WINE: Enabling Virtual Desktop mode with ${DISPLAY_WIDTH}:${DISPLAY_WIDTH} aspect ratio"
+    winetricks vd="${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}"
     else
         # Default aspect ratio
         log_message "WINE: Enabling Virtual Desktop mode with recommended aspect ratio"
@@ -95,86 +49,52 @@ else
     fi
 fi
 
-check_url_validity() {
-    url="$1"
-    if http_code=$(curl -s -o /dev/null -w "%{http_code}" "$url"); then
-        if [ "$http_code" -eq 200 ]; then
-            content_type=$(curl -s -I "$url" | grep -i content-type | cut -d ':' -f2)
-            if echo "$content_type" | grep -q "xml"; then
-                return 0 # Valid XML content found
-            fi
-        fi
+# Check if backblaze is not installed
+if [ ! -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
+    log_message "BZBUI not detected as installed, starting install routine"
+    # Create config directory for installer if not present
+    if [ ! -d "${install_directory}" ]; then
+        log_message "Install Directory created and existing"
+        mkdir -p "${install_directory}";
+        echo "PUT THE ${install_file_name} file in this folder and restart the container" > "${install_readme}"
+        exit
     fi
-    return 1 # Invalid or unavailable content
-}
-
-compare_versions() {
-    local_version="$1"
-    compare_version="$2"
-
-    if dpkg --compare-versions "$local_version" lt "$compare_version"; then
-        return 0 # The compare_version is higher
-    else
-        return 1 # The local version is higher or equal
+    
+    # Check if installer exists
+    if [ ! -f "${install_file}" ]; then
+        log_message $(echo "NO ${install_file_name} file found at ${install_file}" | tee "${install_readme}")
+        exit
     fi
-}
 
-# If Backblaze is installed
-if [ -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
-    # Update process for force_latest_update set to true or not set
-    if [ "$FORCE_LATEST_UPDATE" = "true" ]; then
-        # Main auto update logic
-        if [ -f "$local_version_file" ]; then
-            log_message "UPDATER: FORCE_LATEST_UPDATE=true, checking for a new version"
-            urls="
-                https://ca000.backblaze.com/api/clientversion.xml
-                https://ca001.backblaze.com/api/clientversion.xml
-                https://ca002.backblaze.com/api/clientversion.xml
-                https://ca003.backblaze.com/api/clientversion.xml
-                https://ca004.backblaze.com/api/clientversion.xml
-                https://ca005.backblaze.com/api/clientversion.xml
-            "
+    # Copy installer to C: drive
+    log_message "INSTALLER: Copying ${install_file_name} from ${install_file} -> ${WINEPREFIX}drive_c/${install_file_name}"
+    cp -f "${install_file}" "${WINEPREFIX}/drive_c/${install_file_name}"
 
-            for url in $urls; do
-                if check_url_validity "$url"; then
-                    xml_content=$(curl -s "$url") || handle_error "UPDATER: Failed to fetch XML content"
-                    xml_version=$(echo "$xml_content" | grep -o '<update win32_version="[0-9.]*"' | cut -d'"' -f2)
-                    local_version=$(cat "$local_version_file") || handle_error "UPDATER: Failed to read local version from $local_version_file"
-                    log_message "UPDATER: Installed Version=$local_version"
-                    log_message "UPDATER: Latest Version=$xml_version"
-                    if compare_versions "$local_version" "$xml_version"; then
-                        log_message "UPDATER: Newer version found - downloading and installing the newer version..."
-                        fetch_and_install
-                    else
-                        log_message "UPDATER: The installed version is up to date."
-                        start_app # Exit autoupdate and start app
-                    fi
-                fi
-            done
+    log_message "INSTALLER: Changing to: ${WINEPREFIX}/drive_c/"
+    cd "${WINEPREFIX}/drive_c/"
 
-            handle_error "No valid XML content found or all URLs are unavailable."
-        else
-            handle_error "Local version file not found. Exiting."
-        fi
-    else
-        # Update process for force_latest_update set to false or anything else
-        if [ -f "$local_version_file" ]; then
-            local_version=$(cat "$local_version_file") || handle_error "UPDATER: Failed to read local version file"
-            log_message "UPDATER: FORCE_LATEST_UPDATE=false"
-            log_message "UPDATER: Installed Version=$local_version"
-            log_message "UPDATER: Pinned Version=$pinned_bz_version"
-
-            if compare_versions "$local_version" "$pinned_bz_version"; then
-                log_message "UPDATER: Newer version found - downloading and installing the newer version..."
-                fetch_and_install
-            else
-                log_message "UPDATER: Installed version is up to date. There may be a newer version available when using FORCE_LATEST_UPDATE=true"
-                start_app # Exit autoupdate and start app
-            fi
-        else
-            handle_error "UPDATER: Local version file does not exist. Exiting updater."
-        fi
-    fi
-else # Client currently not installed
-    fetch_and_install
+    # Run installer
+    log_message "INSTALLER: Starting install_backblaze.exe"
+    WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" &
+    
+    log_message "INSTALLER: Waiting for installer to finish"
+    # First wait for the installer to start
+    while [ "$(pgrep bzdoinstall)" = "" ]
+    do
+        sleep 1
+    done
+    # Now we wait for the bzgui to start
+    while [ "$(pgrep bzbui)" = "" ]
+    do
+        sleep 1
+    done
+    # It's started we can wait 30 seconds, kill the installer and the bzbui, and force the container to restart
+    sleep 30
+    kill $(pgrep bzbui) $(pgrep bzdoinstall) $(pgrep install_backblaze)
+    exit
 fi
+
+# Start the app
+log_message "STARTAPP: Starting Backblaze version $(cat "$local_version_file")"
+wine64 "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" -noquiet &
+sleep infinity
