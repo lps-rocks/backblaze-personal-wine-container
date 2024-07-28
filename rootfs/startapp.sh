@@ -75,7 +75,7 @@ if [ ! -f "${WINEPREFIX}drive_c/Program Files (x86)/Backblaze/bzbui.exe" ]; then
 
     # Run installer
     log_message "INSTALLER: Starting install_backblaze.exe"
-    WINEARCH="$WINEARCH" WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" &
+    WINEPREFIX="$WINEPREFIX" wine64 "install_backblaze.exe" &
     
     log_message "INSTALLER: Waiting for installer to finish"
     # First wait for the installer to start
