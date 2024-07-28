@@ -3,7 +3,7 @@ set -x
 
 # Globals
 config="${CONFIG_DIR:-/config/}"
-log_file="${STARTUP_LOGFILE:-${CONFIG_DIR}/log/backblaze-wine-startup.log}"
+log_file="${STARTUP_LOGFILE:-${config}/log/backblaze-wine-startup.log}"
 install_directory="${config}/installer/"
 install_file_name="install_backblaze.exe"
 install_file="${install_directory}/${install_file_name}"
